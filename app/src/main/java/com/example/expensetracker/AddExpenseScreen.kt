@@ -1,18 +1,24 @@
 package com.example.expensetracker
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,18 +26,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuBoxScope
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Green
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +59,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.expensetracker.ui.theme.ExpenseTextView
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun AddExpense(){
@@ -94,7 +116,14 @@ fun DataForm(modifier: Modifier){
 
     val name = remember  { mutableStateOf("") }
     val amount = remember  { mutableStateOf("") }
-
+    val date = remember  { mutableStateOf(0L) }
+    val dateDialogVis= remember{ mutableStateOf(false) }
+    val category= remember {
+        mutableStateOf("")
+    }
+    val type= remember {
+        mutableStateOf("")
+    }
     Column (
         modifier= modifier
             .padding(16.dp)
@@ -116,6 +145,29 @@ fun DataForm(modifier: Modifier){
         OutlinedTextField(value = amount.value, onValueChange = {amount.value=it}, modifier= Modifier.fillMaxWidth())
         Spacer(modifier=Modifier.size(12.dp))
 
+        ExpenseTextView(text = "Date", fontSize=16.sp)
+        Spacer(modifier= Modifier.size(8.dp))
+        OutlinedTextField(value = if(date.value==0L) " " else Util.formatDatetoHumanRead(date.value),
+            onValueChange = {}, modifier= Modifier
+                .fillMaxWidth()
+                .clickable { dateDialogVis.value = true }, enabled = false)
+
+        Spacer(modifier= Modifier.size(16.dp))
+
+        ExpenseTextView(text = "Category", fontSize=16.sp)
+        Spacer(modifier= Modifier.size(8.dp))
+        ExpenseDropDown(listOfItems = listOf("Netflix","Food", "Canteen", "Entertainment","College", "Transportation"),
+            onItemSelected = {category.value=it}
+            )
+        Spacer(modifier= Modifier.size(16.dp))
+        ExpenseTextView(text = "Type", fontSize=16.sp)
+        Spacer(modifier= Modifier.size(8.dp))
+        ExpenseIncomeToggle { isIncome ->
+            type.value= if(isIncome){"Income"} else "Expense"
+        }
+
+
+
         Button(onClick = {}, modifier= Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(3.dp))){
@@ -125,20 +177,145 @@ fun DataForm(modifier: Modifier){
                 color=Color.White
             )
         }
-
-
+    }
+    if(dateDialogVis.value){
+    ExpenseDatePicker(onDateSelected = {date.value=it; dateDialogVis.value=false}, onDismiss = {dateDialogVis.value=false})
 
     }
 
 }
 
 @Composable
+fun ExpenseIncomeToggle(
+    onSelectionChanged: (Boolean) -> Unit = {}
+) {
+    var isIncome by remember { mutableStateOf(false) }
+    val animatedColor by animateColorAsState(
+        targetValue = if (isIncome) Color.Green else Color.Red,
+        animationSpec = tween(300)
+    )
 
+    Box(
+        modifier = Modifier
+            .padding(4.dp)
+            .fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.LightGray.copy(alpha = 0.2f))
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            ToggleButton(
+                text = "Income",
+                isSelected = isIncome,
+                selectedColor = Color.Green,
+                onClick = {
+                    isIncome = true
+                    onSelectionChanged(true)
+                }
+            )
 
+            ToggleButton(
+                text = "Expense",
+                isSelected = !isIncome,
+                selectedColor = Color.Red,
+                onClick = {
+                    isIncome = false
+                    onSelectionChanged(false)
+                }
+            )
+        }
+    }
+}
 
+@Composable
+private fun ToggleButton(
+    text: String,
+    isSelected: Boolean,
+    selectedColor: Color,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(
+                if (isSelected) selectedColor else Color.Transparent,
+                RoundedCornerShape(6.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            color = if (isSelected) Color.White else selectedColor,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExpenseDatePicker(
+    onDateSelected: (date: Long) -> Unit,
+    onDismiss: () -> Unit
+){
+    val datePickerState= rememberDatePickerState()
+    val selecteddate= datePickerState.selectedDateMillis ?:0L
+    DatePickerDialog(onDismissRequest = { onDismiss()},
+        confirmButton = {
+            TextButton(onClick = { onDateSelected(selecteddate) }) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick= {onDateSelected(selecteddate)}){
+                Text("Cancel")
+            }
+        }
+    ) {
+           DatePicker(state=datePickerState,
+
+           )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExpenseDropDown(listOfItems:List<String>,onItemSelected:(Item:String)->Unit){
+   val expanded =remember{
+         mutableStateOf(false)
+    }
+     val selectedItem= remember{ mutableStateOf(listOfItems[0]) }
+    ExposedDropdownMenuBox(expanded = expanded.value, onExpandedChange = {expanded.value=it}){
+         TextField(value = selectedItem.value, onValueChange ={},
+             modifier= Modifier
+                 .fillMaxWidth()
+                 .menuAnchor(), readOnly = true,
+             trailingIcon = {
+                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded.value)
+             })
+            ExposedDropdownMenu(expanded = expanded.value, onDismissRequest = {}){
+                listOfItems.forEach{
+                    DropdownMenuItem(text = { Text(it)}, onClick = { selectedItem.value= it;onItemSelected(selectedItem.value); expanded.value= false})
+                }
+            }
+    }
+}
 
 @Preview
 @Composable
 fun addexpensePreview(){
     AddExpense()
+}
+
+object Util{
+    fun formatDatetoHumanRead(date:Long):String{
+           val dateFormatter=SimpleDateFormat("dd/MM/YYYY", Locale.getDefault())
+
+        return dateFormatter.format(date)
+    }
 }
