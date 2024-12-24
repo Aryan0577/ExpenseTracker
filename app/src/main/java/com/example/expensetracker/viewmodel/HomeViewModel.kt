@@ -5,12 +5,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.expensetracker.R
+import com.example.expensetracker.Util
 import com.example.expensetracker.data.ExpenseDataBase
 import com.example.expensetracker.data.dao.ExpenseDao
 import com.example.expensetracker.data.model.ExpenseEntity
 
 class HomeViewModel(dao: ExpenseDao): ViewModel(){
     val expenses= dao.getAllExpenses()
+
 
     fun getBalance(list:List<ExpenseEntity>): String{
           var total=0.0
@@ -20,7 +22,7 @@ class HomeViewModel(dao: ExpenseDao): ViewModel(){
               }
               else total-= it.amount
           }
-        return total.toString()
+        return Util.formatToDecimalValue(total)
     }
 
     fun getTotalIncome(list:List<ExpenseEntity>): String{
@@ -30,7 +32,7 @@ class HomeViewModel(dao: ExpenseDao): ViewModel(){
                 total += it.amount
             }
         }
-        return total.toString()
+        return Util.formatToDecimalValue(total)
     }
     fun getTotalExpense(list:List<ExpenseEntity>): String{
         var total=0.0
@@ -39,32 +41,9 @@ class HomeViewModel(dao: ExpenseDao): ViewModel(){
                 total += it.amount
             }
         }
-        return total.toString()
+        return Util.formatToDecimalValue(total)
     }
 
-    fun getItemIcon(item:ExpenseEntity):Int {
-        if (item.category == "Salary") {
-            return R.drawable.ic_upwork
-        } else if (item.category == "Income") {
-            return R.drawable.ic_upwork
-        } else if (item.category == "Salary") {
-            return R.drawable.ic_upwork
-        } else if (item.category == "Income") {
-            return R.drawable.ic_upwork
-        } else if (item.category == "Income") {
-            return R.drawable.ic_upwork
-        } else if (item.category == "Salary") {
-            return R.drawable.ic_upwork
-        } else if (item.category == "Income") {
-            return R.drawable.ic_upwork
-        } else if (item.category == "Income") {
-           return R.drawable.ic_upwork
-        } else if (item.category == "Salary") {
-            return R.drawable.ic_upwork
-        } else if (item.category == "Income") {
-            return R.drawable.ic_upwork
-        } else return R.drawable.ic_upwork
-    }
 }
 
 

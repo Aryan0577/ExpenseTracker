@@ -3,6 +3,7 @@ package com.example.expensetracker
 import android.widget.TextView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.navigation.NavController
 import com.example.expensetracker.data.model.ExpenseEntity
 import com.example.expensetracker.ui.theme.ExpenseTextView
 import com.example.expensetracker.ui.theme.Zinc
@@ -42,12 +45,12 @@ import kotlin.math.exp
 
 
 @Composable
-fun HomeScreen(){
+fun HomeScreen(navController: NavController){
     
     val viewModel:HomeViewModel=HomeViewModelFactory(LocalContext.current).create(HomeViewModel::class.java)
     Surface(modifier= Modifier.fillMaxSize()){
        ConstraintLayout(modifier= Modifier.fillMaxSize()){
-         val (namerow, list, card , topBar) = createRefs()
+         val (namerow, list, add,card , topBar) = createRefs()
           Image(painterResource(id = R.drawable.ic_topbar), null, modifier=Modifier.constrainAs(topBar){
               top.linkTo(parent.top)
               start.linkTo(parent.start)
@@ -93,8 +96,18 @@ fun HomeScreen(){
                        end.linkTo(parent.end)
                        bottom.linkTo(parent.bottom)
                        height = Dimension.fillToConstraints
-                   },state.value, viewModel)
+                   },state.value)
+
+           Image(painterResource(id = R.drawable.ic_add), null, modifier= Modifier
+               .constrainAs(add){
+                   bottom.linkTo(parent.bottom)
+                   start.linkTo(parent.start)
+                   end.linkTo(parent.end)
+               }.size(80.dp).clip(CircleShape).padding(24.dp).clickable{
+                navController.navigate("add");}
+           )
        }
+
 
     }
 }
@@ -108,7 +121,6 @@ fun TransactionItem(
     color: Color,
     modifier: Modifier
 ) {
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -127,6 +139,7 @@ fun TransactionItem(
                 ExpenseTextView(text = date, fontSize = 13.sp, color = Color.LightGray)
             }
         }
+
         ExpenseTextView(
             text = amount,
             fontSize = 18.sp,
@@ -139,6 +152,7 @@ fun TransactionItem(
 
 @Composable
 fun CardItem(modifier: Modifier, balance: String, income:String, expense:String){
+
     Column(modifier= modifier
         .padding(16.dp)
         .fillMaxWidth()
@@ -180,7 +194,7 @@ fun CardItem(modifier: Modifier, balance: String, income:String, expense:String)
 fun TransactionList(
     modifier: Modifier,
     list:List<ExpenseEntity>,
-    viewModel: HomeViewModel
+    title: String="Recent"
 ) {
 
     LazyColumn(
@@ -188,20 +202,18 @@ fun TransactionList(
             .fillMaxWidth()
     ) {
         item{Box(modifier = Modifier.fillMaxWidth()){
-            ExpenseTextView(text="Recent Transactions", fontSize= 20.sp)
-            ExpenseTextView(text="See all", fontSize= 16.sp, modifier = Modifier.align(
-                Alignment.CenterEnd))
+            ExpenseTextView(text=title, fontSize= 20.sp)
+            if(title=="Recent"){ExpenseTextView(text="See all", fontSize= 16.sp, modifier = Modifier.align(
+                Alignment.CenterEnd))}
         }}
 
         items(list){item->
-            TransactionItem(title = item.title, amount = item.amount.toString(),
-                icon = viewModel.getItemIcon(item),
-                date = item.date.toString(),
+            TransactionItem(title = item.title?:"", amount = "$"+ Util.formatToDecimalValue(item.amount),
+                icon = getItemIcon(item),
+                date = Util.formatDatetoHumanRead(item.date),
                 color = if(item.type=="Income") Color.Green else Color.Red,
                 modifier = Modifier )
         }
-
-
         }
 }
 @Composable
@@ -222,10 +234,27 @@ fun CardRowItem(modifier: Modifier, title: String, amount: String, imaget: Int) 
 }
 
 
-@Preview
-@Composable
-fun PreviewHomeScreen(){
-    HomeScreen()
+fun getItemIcon(item:ExpenseEntity):Int {
+    if (item.category == "Salary") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Income") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Salary") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Income") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Income") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Salary") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Income") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Income") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Salary") {
+        return R.drawable.ic_upwork
+    } else if (item.category == "Income") {
+        return R.drawable.ic_upwork
+    } else return R.drawable.ic_upwork
 }
-
 
